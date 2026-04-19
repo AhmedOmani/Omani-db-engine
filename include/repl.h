@@ -1,5 +1,5 @@
-#ifndef INPUT_BUFFER_H
-#define INPUT_BUFFER_H
+#ifndef REPL_H
+#define REPL_H
 
 #include <sys/types.h>
 

@@ -14,6 +14,7 @@ include_directories(${PROJECT_SOURCE_DIR}/include)
 set(SOURCES
     main.c
     src/repl.c
+    src/compiler.c
 )
 
 # Build the executable
