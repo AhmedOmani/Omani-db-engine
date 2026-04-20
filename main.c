@@ -1,13 +1,11 @@
 #include "include/repl.h"
 #include "include/compiler.h"
 #include <stdio.h>
-#include <string.h>
 #include <stdbool.h>
-#include <stdlib.h>
 
 int main () {
+    Table* table = new_table();
     InputBuffer* input_buffer = new_input_buffer();
-    stats* stats = new_stats();
 
     while (true) {
         
@@ -16,7 +14,7 @@ int main () {
         printf("%s\n" , input_buffer->buffer);
 
         if (input_buffer->buffer[0] == '.') {
-            switch(do_meta_command(input_buffer, stats)) {
+            switch(do_meta_command(input_buffer, table)) {
                 case META_COMMAND_SUCCESS:
                     continue;
                 case META_COMMAND_UNRECOGNIZED_COMMAND:
@@ -25,8 +23,8 @@ int main () {
             }
         }
 
+        //Determine the type of statement
         Statement statement;
-
         switch (prepare_statement(input_buffer, &statement)) {
             case PREPARE_SUCCESS:
                 break;
@@ -38,8 +36,17 @@ int main () {
                 continue;
         }
 
-        execute_statement(&statement, stats);
-        printf("Command excuted successfully.\n");
+        switch (execute_statement(&statement, table)) {
+            case EXCUTE_SUCCESS:
+                printf("Command excuted successfully.\n");
+                break;
+            case EXCUTE_TABLE_FULL:
+                printf("Error: Table is full.\n");
+                break;
+            case EXCUTE_ERROR:
+                printf("Error: Could not execute statement.\n");
+                break;
+        }
     }
     return 0;
 }
