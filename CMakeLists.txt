@@ -15,6 +15,8 @@ set(SOURCES
     main.c
     src/repl.c
     src/compiler.c
+    src/vm.c
+    src/storage.c
 )
 
 # Build the executable

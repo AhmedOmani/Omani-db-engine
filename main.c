@@ -1,5 +1,7 @@
 #include "include/repl.h"
 #include "include/compiler.h"
+#include "include/vm.h"
+
 #include <stdio.h>
 #include <stdbool.h>
 
