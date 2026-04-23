@@ -4,24 +4,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-Table* new_table() {
-    Table* table = (Table*)malloc(sizeof(Table));
-    table->total_rows = 0 ;
-    table->total_pages = 0;
-    for (uint32_t i = 0 ; i < TABLE_MAX_PAGES ; i++) {
-        table->pages[i] = NULL;
-    }
-    table->stats = new_stats();
-    return table;
-}
-
-void free_table(Table* table) {
-    for (uint32_t i = 0 ; table->pages[i] ; i++) { // loop until a page is null
-        free(table->pages[i]);
-    }
-    free(table->stats);
-    free(table);
-}
 
 MetaCommandResult do_meta_command(InputBuffer *input_buffer, Table* table) {
     if (strcmp(input_buffer->buffer, ".exit") == 0) {
@@ -69,9 +51,6 @@ int parse_insert_query(InputBuffer* input_buffer , Row* row) {
     int args_assigned = sscanf(input_buffer->buffer, "insert %u %s %s", &row->id, row->email, row->password);
     return args_assigned;
 }
-
-
-
 
 void print_stats(Stats* stats) {
     printf("Total rows: %u\n", stats->total_rows);

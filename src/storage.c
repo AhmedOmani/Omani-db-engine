@@ -3,6 +3,27 @@
 #include <stdio.h>
 #include <string.h>
 
+Table* new_table() {
+    Table* table = (Table*)malloc(sizeof(Table));
+    table->total_rows = 0 ;
+    table->total_pages = 0;
+    for (uint32_t i = 0 ; i < TABLE_MAX_PAGES ; i++) {
+        table->pages[i] = NULL;
+    }
+    table->stats = new_stats();
+    return table;
+}
+
+void free_table(Table* table) {
+    for (uint32_t i = 0 ; table->pages[i] ; i++) { // loop until a page is null
+        free(table->pages[i]);
+    }
+    free(table->stats);
+    free(table);
+}
+
+//Always remember when you are struggle at the question of "where is the start of the row ?"
+//This funtion will gives you thr answer.
 void* row_slot(Table* table , uint32_t row_number) {
     uint32_t page_number = row_number / ROWS_PER_PAGE;
     void* page = table->pages[page_number];

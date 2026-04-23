@@ -14,4 +14,6 @@ ExcuteResult execute_statement(Statement* statement, Table* table);
 ExcuteResult execute_insert(Statement* statement , Table* table);
 ExcuteResult execute_select(Statement* statement , Table* table);
 
+void print_row(Row* row);
+
 #endif

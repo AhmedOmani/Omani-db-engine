@@ -1,4 +1,5 @@
 #include "../include/vm.h"
+#include "../include/storage.h"
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -27,7 +28,14 @@ ExcuteResult execute_insert(Statement* statement , Table* table) {
 
 
 ExcuteResult execute_select(Statement* statement , Table* table) {
-    printf("SELECT STATEMENT IS HERE!\n");
+    Row row;
+    for (uint32_t i = 0 ; i < table->total_rows ; i++) {
+        deserialize_row(row_slot(table , i), &row);
+        print_row(&row);
+    }
     return EXCUTE_SUCCESS;
 }
 
+void print_row(Row* row) {
+    printf("(%d, %s, %s)\n", row->id, row->email, row->password);
+}

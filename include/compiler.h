@@ -33,5 +33,4 @@ int parse_insert_query(InputBuffer* input_buffer , Row* row);
 
 void debug(Table* table);
 
-
 #endif
