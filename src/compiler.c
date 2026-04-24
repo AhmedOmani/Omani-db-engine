@@ -30,10 +30,23 @@ PrepareResult prepare_statement(InputBuffer *input_buffer, Statement *statement)
         //Parse the insert query and store the values in the row
         Row row = statement->insertion_row;
         int args_assigned = parse_insert_query(input_buffer, &row);
+        
+        if (args_assigned == 0) {
+            return PREPARE_SYNTAX_ERROR;
+        }
+
+        if (args_assigned == -1) {
+            return PREPARE_EMAIL_TOO_LONG;
+        }
+
+        if (args_assigned == -2) {
+            return PREPARE_PASSWORD_TOO_LONG;
+        }
 
         if (args_assigned < 3 || args_assigned > 3) {
             return PREPARE_SYNTAX_ERROR;
         }
+
         statement->insertion_row = row;
 
         return PREPARE_SUCCESS;
@@ -48,8 +61,22 @@ PrepareResult prepare_statement(InputBuffer *input_buffer, Statement *statement)
 }
 
 int parse_insert_query(InputBuffer* input_buffer , Row* row) {
-    int args_assigned = sscanf(input_buffer->buffer, "insert %u %s %s", &row->id, row->email, row->password);
-    return args_assigned;
+    char* keyword = strtok(input_buffer->buffer, " ");
+    char* id_string = strtok(NULL , " ");
+    char* email = strtok(NULL , " ");
+    char* password = strtok(NULL , " ");
+    
+    //Validation 
+    if (id_string == NULL || email == NULL || password == NULL) { return 0;}
+
+    if (strlen(email) > EMAIL_COLUMN_LENGTH) { return -1;}
+    if (strlen(password) > PASSOWRD_COLUMN_LENGTH) { return -2;}
+
+    //Assiging data 
+    row->id = atoi(id_string);
+    strcpy(row->email, email);
+    strcpy(row->password , password);
+    return 3;
 }
 
 void print_stats(Stats* stats) {

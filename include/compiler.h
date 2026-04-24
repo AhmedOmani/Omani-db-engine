@@ -4,6 +4,9 @@
 #include "repl.h"
 #include "storage.h"
 
+#include <string.h>
+#include <stdlib.h>
+
 typedef enum {
     META_COMMAND_SUCCESS,
     META_COMMAND_UNRECOGNIZED_COMMAND
@@ -12,6 +15,8 @@ typedef enum {
 typedef enum {
     PREPARE_SUCCESS,
     PREPARE_SYNTAX_ERROR,
+    PREPARE_EMAIL_TOO_LONG,
+    PREPARE_PASSWORD_TOO_LONG,
     PREPARE_UNRECOGNIZED_STATEMENT
 } PrepareResult;
 

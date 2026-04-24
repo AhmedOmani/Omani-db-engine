@@ -15,7 +15,7 @@ Table* new_table() {
 }
 
 void free_table(Table* table) {
-    for (uint32_t i = 0 ; table->pages[i] ; i++) { // loop until a page is null
+    for (uint32_t i = 0 ; i < TABLE_MAX_PAGES && table->pages[i] != NULL ; i++) { // loop until a page is null
         free(table->pages[i]);
     }
     free(table->stats);

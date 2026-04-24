@@ -30,6 +30,12 @@ int main () {
         switch (prepare_statement(input_buffer, &statement)) {
             case PREPARE_SUCCESS:
                 break;
+            case PREPARE_EMAIL_TOO_LONG:
+                printf("Error: Email is too long.\n");
+                continue;
+            case PREPARE_PASSWORD_TOO_LONG:
+                printf("Error: Password is too long.\n");
+                continue;
             case PREPARE_SYNTAX_ERROR:
                 printf("Syntax error! Could not parse statement.\n");
                 continue;
