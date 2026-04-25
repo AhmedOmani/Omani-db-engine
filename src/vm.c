@@ -25,8 +25,6 @@ ExcuteResult execute_insert(Statement* statement , Table* table) {
     return EXCUTE_SUCCESS;
 }
 
-
-
 ExcuteResult execute_select(Statement* statement , Table* table) {
     Row row;
     for (uint32_t i = 0 ; i < table->total_rows ; i++) {

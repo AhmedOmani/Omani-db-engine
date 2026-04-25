@@ -8,7 +8,7 @@
 MetaCommandResult do_meta_command(InputBuffer *input_buffer, Table* table) {
     if (strcmp(input_buffer->buffer, ".exit") == 0) {
         close_input_buffer(input_buffer);
-        free_table(table);
+        db_close(table);
         exit(EXIT_SUCCESS);
     } 
     
@@ -62,6 +62,7 @@ PrepareResult prepare_statement(InputBuffer *input_buffer, Statement *statement)
 
 int parse_insert_query(InputBuffer* input_buffer , Row* row) {
     char* keyword = strtok(input_buffer->buffer, " ");
+    (void)keyword;
     char* id_string = strtok(NULL , " ");
     char* email = strtok(NULL , " ");
     char* password = strtok(NULL , " ");
@@ -73,6 +74,7 @@ int parse_insert_query(InputBuffer* input_buffer , Row* row) {
     if (strlen(password) > PASSOWRD_COLUMN_LENGTH) { return -2;}
 
     //Assiging data 
+    memset(row, 0, sizeof(Row));
     row->id = atoi(id_string);
     strcpy(row->email, email);
     strcpy(row->password , password);

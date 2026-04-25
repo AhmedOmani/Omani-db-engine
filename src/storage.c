@@ -1,48 +1,63 @@
 #include "../include/storage.h"
+#include <stdint.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 
-Table* new_table() {
+Table* db_open(const char* filename) {
+    Pager* pager = pager_open(filename);
     Table* table = (Table*)malloc(sizeof(Table));
-    table->total_rows = 0 ;
-    table->total_pages = 0;
-    for (uint32_t i = 0 ; i < TABLE_MAX_PAGES ; i++) {
-        table->pages[i] = NULL;
-    }
+    table->pager = pager;
+    table->total_rows = pager->file_length / ROW_SIZE;
+    table->total_pages = pager->file_length / PAGE_SIZE;
     table->stats = new_stats();
     return table;
 }
 
-void free_table(Table* table) {
-    for (uint32_t i = 0 ; i < TABLE_MAX_PAGES && table->pages[i] != NULL ; i++) { // loop until a page is null
-        free(table->pages[i]);
+void db_close(Table* table) {
+    Pager *pager = table->pager;
+    
+    uint32_t full_pages = table->total_rows / ROWS_PER_PAGE;
+    /**
+        The reason we are doing in that way because we need to rely on the length of the file to use it in another sessions to retrieve the number of rows
+        , we cant store the whole 4kb page in the file because it will gives us wrong data in this formula
+        total_rows = file_length / ROW_SIZE
+    */
+    //First finish the full pages that are 4kb
+    for (uint32_t i = 0 ; i < full_pages ; i++) {
+        if (pager->cache_pages[i] == NULL) continue;
+        flush_pages(pager, i, PAGE_SIZE);
+        free(pager->cache_pages[i]);
+        pager->cache_pages[i] = NULL;
     }
-    free(table->stats);
+    
+    //then finish the last page if it contains rows
+    uint32_t remaining_rows = table->total_rows % ROWS_PER_PAGE ;
+    if (remaining_rows > 0) {
+        uint32_t last_page_number = full_pages;
+        if(pager->cache_pages[last_page_number]) {
+            flush_pages(pager , last_page_number , remaining_rows * ROW_SIZE);
+            free(pager->cache_pages[last_page_number]);
+            pager->cache_pages[last_page_number] = NULL;
+        }
+    }
+    
+    int result = close(table->pager->file_discriptor);
+    
+    if (result == -1) {
+        printf("Error closing db file.\n");
+        exit(EXIT_FAILURE);
+    }
+    free(pager);
     free(table);
 }
 
-//Always remember when you are struggle at the question of "where is the start of the row ?"
-//This funtion will gives you thr answer.
 void* row_slot(Table* table , uint32_t row_number) {
     uint32_t page_number = row_number / ROWS_PER_PAGE;
-    void* page = table->pages[page_number];
-    if(page == NULL) {
-        page = table->pages[page_number] = malloc(PAGE_SIZE);
-        table->total_pages += 1;
-    }
-    //The core idea is we need to know which slot we are currently stand on right now
-    //if page has 3 slots -> 0 , 1 , 2 slots
-    //if row_number = 0 -> 0 % 3 = 0 -> first slot
-    //if row_number = 1 -> 1 % 3 = 1 -> second slot
-    //if row_number = 2 -> 2 % 3 = 2 -> third slot
-    //and after we know that we need to find the exact byte offset
-    //that we start putting data into and that is equal to size of the row times the row offset
-    uint32_t row_offset = row_number % ROWS_PER_PAGE;
-    uint32_t byte_offset = row_offset * ROW_SIZE;
-
-    //At the end we return the address of the page + byte offset and tha tis the address / place we start putting data into
-    return (char*)page + byte_offset;
+    void* page = get_page(table->pager, page_number);
+    uint32_t row_modulo = row_number % ROWS_PER_PAGE;
+    uint32_t row_start_offset = row_modulo * ROW_SIZE;
+    return page + row_start_offset;
 }
 
 void serialize_row(Row* source, void *destination) {
@@ -57,35 +72,6 @@ void deserialize_row(void* source, Row* destination) {
     memcpy(&(destination->password) , (char*)source + PASSWORD_OFFSET , PASSWORD_SIZE);
 }
 
-void debug(Table* table) {
-    printf("\n====== DATABASE ENGINE DEBUG ======\n");
-    printf("Total Rows: %u | Total Pages Allocated: %u\n", table->total_rows, table->total_pages);
-    
-    
-    for (uint32_t i = 0; i < TABLE_MAX_PAGES; i++) {
-      
-        if (table->pages[i] != NULL) {
-            printf("\n--> [PAGE %u] Memory Address: %p\n", i, table->pages[i]);
-            
-        
-            uint32_t start_row = i * ROWS_PER_PAGE;
-            uint32_t end_row = start_row + ROWS_PER_PAGE;
-            
-            
-            if (end_row > table->total_rows) {
-                end_row = table->total_rows;
-            }
-            
-          
-            for (uint32_t r = start_row; r < end_row; r++) {
-                Row row;
-                deserialize_row(row_slot(table, r), &row);
-                printf("    Row Offset: %u (Absolute Row: %u) | id: %u | email: '%s' | password: '%s'\n", r - start_row, r, row.id, row.email, row.password);
-            }
-        }
-    }
-    printf("===================================\n");
-}
 
 //Observability
 Stats* new_stats() {
@@ -94,4 +80,8 @@ Stats* new_stats() {
     stats->total_allocated_pages = 0;
     stats->total_bytes = 0;
     return stats;
+}
+
+void debug(Table* table) {
+    
 }

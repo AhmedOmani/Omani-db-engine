@@ -17,6 +17,7 @@ set(SOURCES
     src/compiler.c
     src/vm.c
     src/storage.c
+    src/pager.c
 )
 
 # Build the executable

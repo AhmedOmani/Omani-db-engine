@@ -6,7 +6,7 @@
 #include <stdbool.h>
 
 int main () {
-    Table* table = new_table();
+    Table* table = db_open("omani.db");
     InputBuffer* input_buffer = new_input_buffer();
 
     while (true) {
