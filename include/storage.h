@@ -9,6 +9,7 @@
 #include <stdint.h>
 #include <sys/types.h>
 #include <stddef.h>
+#include <stdbool.h>
 
 typedef struct {
     uint32_t id;
@@ -29,6 +30,12 @@ typedef struct {
     Stats* stats;
 } Table;
 
+typedef struct {
+    Table* table;
+    uint32_t index;
+    bool end_of_table;
+} Cursor;
+
 #define size_of_attribute(Struct, Attribute) sizeof(((Struct*)0)->Attribute)
 
 #define ID_SIZE size_of_attribute(Row, id)
@@ -43,10 +50,11 @@ typedef struct {
 #define ROWS_PER_PAGE (PAGE_SIZE / ROW_SIZE)
 #define TABLE_MAX_ROWS (ROWS_PER_PAGE * TABLE_MAX_PAGES)
 
-void* row_slot(Table* table , uint32_t row_number);
 
 Table* db_open(const char* filename);
 void db_close(Table* table);
+
+void* cursor_value(Cursor* cursor);
 
 void serialize_row(Row* source, void* destination);
 void deserialize_row(void* source, Row* destination);
@@ -55,5 +63,10 @@ void debug(Table* table);
 
 Stats* new_stats();
 void print_stats(Stats* stats);
+
+//Cursor functionality
+Cursor* table_start(Table* table);
+Cursor* table_end(Table* table);
+void cursor_advance(Cursor* cursor);
 
 #endif

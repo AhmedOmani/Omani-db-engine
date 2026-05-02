@@ -20,17 +20,24 @@ ExcuteResult execute_insert(Statement* statement , Table* table) {
     }
 
     Row* row = &(statement->insertion_row);
-    serialize_row(row, row_slot(table, table->total_rows));
+    Cursor* cursor = table_end(table);
+    serialize_row(row, cursor_value(cursor));
     table->total_rows += 1;
+
+    free(cursor);
+
     return EXCUTE_SUCCESS;
 }
 
 ExcuteResult execute_select(Statement* statement , Table* table) {
     Row row;
-    for (uint32_t i = 0 ; i < table->total_rows ; i++) {
-        deserialize_row(row_slot(table , i), &row);
+    Cursor* cursor = table_start(table);
+    while (!(cursor->end_of_table)) {
+        deserialize_row(cursor_value(cursor), &row);
         print_row(&row);
+        cursor_advance(cursor);
     }
+    free(cursor);
     return EXCUTE_SUCCESS;
 }
 

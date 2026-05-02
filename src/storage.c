@@ -52,9 +52,10 @@ void db_close(Table* table) {
     free(table);
 }
 
-void* row_slot(Table* table , uint32_t row_number) {
+void* cursor_value(Cursor* cursor) {
+    uint32_t row_number = cursor->index;
     uint32_t page_number = row_number / ROWS_PER_PAGE;
-    void* page = get_page(table->pager, page_number);
+    void* page = get_page(cursor->table->pager, page_number);
     uint32_t row_modulo = row_number % ROWS_PER_PAGE;
     uint32_t row_start_offset = row_modulo * ROW_SIZE;
     return page + row_start_offset;
@@ -84,4 +85,27 @@ Stats* new_stats() {
 
 void debug(Table* table) {
     
+}
+
+Cursor* table_start(Table* table) {
+    Cursor* cursor = (Cursor*)malloc(sizeof(Cursor));
+    cursor->table = table;
+    cursor->index = 0;
+    cursor->end_of_table = (table->total_rows == 0);
+    return cursor;
+}
+
+Cursor* table_end(Table* table) {
+    Cursor* cursor = (Cursor*)malloc(sizeof(Cursor));
+    cursor->table = table;
+    cursor->index = table->total_rows;
+    cursor->end_of_table = true;
+    return cursor;
+}
+
+void cursor_advance(Cursor* cursor) {
+    cursor->index += 1;
+    if (cursor->index >= cursor->table->total_rows) {
+        cursor->end_of_table = true;
+    }
 }
