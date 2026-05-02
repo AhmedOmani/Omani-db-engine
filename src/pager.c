@@ -1,4 +1,5 @@
 #include "../include/pager.h"
+#include <stdio.h>
 
 Pager* pager_open(const char* filename) {
     int fd = open(filename, O_RDWR | O_CREAT, S_IWUSR | S_IRUSR);

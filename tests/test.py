@@ -1,7 +1,15 @@
 import subprocess
 import unittest
-
+import os
 class TestDatabase(unittest.TestCase):
+    def setUp(self):
+        if (os.path.exists("../build/omani.db")):
+            os.remove("../build/omani.db")
+    
+    def tearDown(self):
+        if (os.path.exists("../build/omani.db")):
+            os.remove("../build/omani.db")
+
     def run_commands(self, commands):
         process = subprocess.Popen(
             ["../build/omanidb"],
@@ -62,6 +70,24 @@ class TestDatabase(unittest.TestCase):
 
         output = self.run_commands(commands)
         self.assertEqual(output[0], "Error: Password is too long.")
+    
+    def test_keeps_data_after_closing_connection(self):
+        commands = [
+            "insert 1 ahmed@gmail.com 123",
+            ".exit"
+        ]
+
+        output = self.run_commands(commands)
+        self.assertEqual(output[0], "Command excuted successfully.")
+
+        commands = [
+            "select",
+            ".exit"
+        ]
+
+        output = self.run_commands(commands)
+        self.assertEqual(output[1], "(1, ahmed@gmail.com, 123)")
+        self.assertEqual(output[2], "Command excuted successfully.")
 
 if __name__ == '__main__':
     unittest.main()
